@@ -29,9 +29,12 @@
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     .warn { background: #fff2f2; border-color: #f3b0b0; }
 
-    .tabs { display: flex; gap: 8px; margin-bottom: 8px; }
+    .inputFrame { border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; min-height: 620px; }
+    .tabs { display: flex; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border); background: #f8fafc; border-radius: 10px 10px 0 0; }
     .tabBtn[aria-selected="true"] { border-color: var(--accent); color: var(--accent); background: #eff6ff; }
+    .tabContent { flex: 1 1 auto; padding: 12px; }
     .tabPanel[hidden] { display: none; }
+    .rawSection { margin-top: auto; border-top: 1px solid var(--border); padding: 12px; }
     .rawHeader { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .rawHeader .left { display: flex; justify-content: flex-start; }
   </style>
@@ -42,89 +45,92 @@
     <div class="card">
       <h2 style="margin:0 0 12px 0;">Eingaben</h2>
 
-      <div class="tabs" role="tablist" aria-label="QR-Typ">
-        <button id="tabSepa" class="tabBtn" type="button" role="tab" aria-selected="true" aria-controls="panelSepa">SEPA</button>
-        <button id="tabUrl" class="tabBtn" type="button" role="tab" aria-selected="false" aria-controls="panelUrl">URL</button>
-        <button id="tabWifi" class="tabBtn" type="button" role="tab" aria-selected="false" aria-controls="panelWifi">WiFi</button>
-      </div>
-
-      <div id="panelSepa" class="tabPanel row" role="tabpanel">
-        <div>
-          <label for="name">Empfängername</label>
-          <input id="name" autocomplete="off" placeholder="z.B. Musterfirma GmbH" aria-describedby="errName" />
-          <div id="errName" class="error" role="status" aria-live="polite"></div>
+      <div class="inputFrame">
+        <div class="tabs" role="tablist" aria-label="QR-Typ">
+          <button id="tabSepa" class="tabBtn" type="button" role="tab" aria-selected="true" aria-controls="panelSepa">SEPA</button>
+          <button id="tabUrl" class="tabBtn" type="button" role="tab" aria-selected="false" aria-controls="panelUrl">URL</button>
+          <button id="tabWifi" class="tabBtn" type="button" role="tab" aria-selected="false" aria-controls="panelWifi">WiFi</button>
         </div>
 
-        <div class="row3">
-          <div>
-            <label for="iban">IBAN</label>
-            <input id="iban" autocomplete="off" placeholder="AT..." aria-describedby="errIban" />
-            <div id="errIban" class="error" role="status" aria-live="polite"></div>
+        <div class="tabContent">
+          <div id="panelSepa" class="tabPanel row" role="tabpanel">
+            <div>
+              <label for="name">Empfängername</label>
+              <input id="name" autocomplete="off" placeholder="z.B. Musterfirma GmbH" aria-describedby="errName" />
+              <div id="errName" class="error" role="status" aria-live="polite"></div>
+            </div>
+
+            <div class="row3">
+              <div>
+                <label for="iban">IBAN</label>
+                <input id="iban" autocomplete="off" placeholder="AT..." aria-describedby="errIban" />
+                <div id="errIban" class="error" role="status" aria-live="polite"></div>
+              </div>
+              <div>
+                <label for="bic">BIC (optional)</label>
+                <input id="bic" autocomplete="off" placeholder="z.B. BKAUATWW" aria-describedby="errBic" />
+                <div id="errBic" class="error" role="status" aria-live="polite"></div>
+              </div>
+              <div>
+                <label for="amount">Betrag (optional, EUR)</label>
+                <input id="amount" autocomplete="off" placeholder="z.B. 12,34" aria-describedby="errAmount" />
+                <div id="errAmount" class="error" role="status" aria-live="polite"></div>
+              </div>
+            </div>
+
+            <div>
+              <label for="purpose">Verwendungszweck (optional)</label>
+              <textarea id="purpose" placeholder="z.B. Rechnung 2026-0001"></textarea>
+            </div>
           </div>
-          <div>
-            <label for="bic">BIC (optional)</label>
-            <input id="bic" autocomplete="off" placeholder="z.B. BKAUATWW" aria-describedby="errBic" />
-            <div id="errBic" class="error" role="status" aria-live="polite"></div>
+
+          <div id="panelUrl" class="tabPanel row" role="tabpanel" hidden>
+            <div>
+              <label for="urlInput">URL</label>
+              <input id="urlInput" autocomplete="off" placeholder="https://example.com" />
+              <div class="hint">Protokoll wird automatisch ergänzt, wenn es fehlt.</div>
+            </div>
           </div>
-          <div>
-            <label for="amount">Betrag (optional, EUR)</label>
-            <input id="amount" autocomplete="off" placeholder="z.B. 12,34" aria-describedby="errAmount" />
-            <div id="errAmount" class="error" role="status" aria-live="polite"></div>
+
+          <div id="panelWifi" class="tabPanel row" role="tabpanel" hidden>
+            <div>
+              <label for="wifiSsid">SSID</label>
+              <input id="wifiSsid" autocomplete="off" placeholder="MeinWLAN" />
+            </div>
+            <div class="row2">
+              <div>
+                <label for="wifiAuth">Verschlüsselung</label>
+                <select id="wifiAuth">
+                  <option value="WPA">WPA/WPA2</option>
+                  <option value="WEP">WEP</option>
+                  <option value="nopass">Ohne Passwort</option>
+                </select>
+              </div>
+              <div>
+                <label for="wifiHidden">Verstecktes Netzwerk</label>
+                <select id="wifiHidden">
+                  <option value="false">Nein</option>
+                  <option value="true">Ja</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label for="wifiPassword">Passwort</label>
+              <input id="wifiPassword" autocomplete="off" placeholder="optional bei nopass" />
+            </div>
           </div>
         </div>
 
-        <div>
-          <label for="purpose">Verwendungszweck (optional)</label>
-          <textarea id="purpose" placeholder="z.B. Rechnung 2026-0001"></textarea>
-          <div class="hint">Wird als unstructured remittance info codiert.</div>
-        </div>
-      </div>
-
-      <div id="panelUrl" class="tabPanel row" role="tabpanel" hidden>
-        <div>
-          <label for="urlInput">URL</label>
-          <input id="urlInput" autocomplete="off" placeholder="https://example.com" />
-          <div class="hint">Protokoll wird automatisch ergänzt, wenn es fehlt.</div>
-        </div>
-      </div>
-
-      <div id="panelWifi" class="tabPanel row" role="tabpanel" hidden>
-        <div>
-          <label for="wifiSsid">SSID</label>
-          <input id="wifiSsid" autocomplete="off" placeholder="MeinWLAN" />
-        </div>
-        <div class="row2">
-          <div>
-            <label for="wifiAuth">Verschlüsselung</label>
-            <select id="wifiAuth">
-              <option value="WPA">WPA/WPA2</option>
-              <option value="WEP">WEP</option>
-              <option value="nopass">Ohne Passwort</option>
-            </select>
+        <div class="rawSection row">
+          <div class="rawHeader">
+            <label for="rawText" style="margin:0;">Roh-Text (unkodiert; wird als QR codiert)</label>
+            <div class="left">
+              <button id="btnAutoEpc" type="button" disabled>Rohdaten neu aus Eingabedaten erzeugen</button>
+            </div>
           </div>
-          <div>
-            <label for="wifiHidden">Verstecktes Netzwerk</label>
-            <select id="wifiHidden">
-              <option value="false">Nein</option>
-              <option value="true">Ja</option>
-            </select>
-          </div>
+          <textarea id="rawText" class="mono"></textarea>
+          <div class="hint">Wenn du dieses Feld editierst, wird es nicht mehr automatisch überschrieben.</div>
         </div>
-        <div>
-          <label for="wifiPassword">Passwort</label>
-          <input id="wifiPassword" autocomplete="off" placeholder="optional bei nopass" />
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:12px;">
-        <div class="rawHeader">
-          <label for="rawText" style="margin:0;">Roh-Text (unkodiert; wird als QR codiert)</label>
-          <div class="left">
-            <button id="btnAutoEpc" type="button" disabled>Rohdaten neu aus Eingabedaten erzeugen</button>
-          </div>
-        </div>
-        <textarea id="rawText" class="mono"></textarea>
-        <div class="hint">Wenn du dieses Feld editierst, wird es nicht mehr automatisch überschrieben.</div>
       </div>
     </div>
 
