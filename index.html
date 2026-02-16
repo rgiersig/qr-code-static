@@ -120,7 +120,7 @@
         <div class="rawHeader">
           <label for="rawText" style="margin:0;">Roh-Text (unkodiert; wird als QR codiert)</label>
           <div class="left">
-            <button id="btnAutoEpc" type="button">EPC neu aus Eingabedaten erzeugen</button>
+            <button id="btnAutoEpc" type="button" disabled>Rohdaten neu aus Eingabedaten erzeugen</button>
           </div>
         </div>
         <textarea id="rawText" class="mono"></textarea>
@@ -243,8 +243,8 @@
         panel.hidden = !active;
       });
 
-      btnAutoEpc.style.display = type === "sepa" ? "inline-block" : "none";
       rawManual = false;
+      updateRawSyncButton();
       render();
     });
 
@@ -307,6 +307,10 @@
       [errName, errIban, errBic, errAmount].forEach((el) => { el.textContent = ""; });
     });
 
+    const updateRawSyncButton = traceWrap("updateRawSyncButton", () => {
+      btnAutoEpc.disabled = !rawManual;
+    });
+
     const buildRawByType = traceWrap("buildRawByType", () => {
       if (activeType === "sepa") return buildSepaText();
       if (activeType === "url") return buildUrlText();
@@ -334,6 +338,7 @@
         elRawText.value = buildRawByType();
       }
 
+      updateRawSyncButton();
       renderQrFromRawText();
       elQrHint.style.display = "block";
     });
@@ -379,9 +384,8 @@
     }));
 
     btnAutoEpc.addEventListener("click", traceWrap("onClick(btnAutoEpc)", () => {
-      if (activeType !== "sepa") return;
       rawManual = false;
-      elRawText.value = buildSepaText();
+      elRawText.value = buildRawByType();
       render();
     }));
 
@@ -397,6 +401,7 @@
     ["input", "change"].forEach((evt) => {
       bindInput(elRawText, evt, () => {
         rawManual = true;
+        updateRawSyncButton();
         if (activeType === "sepa") applySepaWarnings();
         renderQrFromRawText();
       });
