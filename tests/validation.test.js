@@ -81,4 +81,79 @@ run('Mailto: subject and body are URL encoded', () => {
   );
 });
 
+run('Mailto: CC and BCC are encoded', () => {
+  assert.equal(
+    validation.buildMailto(
+      'to@example.com',
+      'Info',
+      '',
+      'copy@example.com',
+      'blind@example.com'
+    ),
+    'mailto:to@example.com?cc=copy%40example.com&bcc=blind%40example.com&subject=Info'
+  );
+});
+
+run('Telephone URI removes whitespace', () => {
+  assert.equal(validation.buildTel(' +43 1 234 56 78 '), 'tel:+4312345678');
+});
+
+run('vCard contains escaped contact data', () => {
+  assert.equal(
+    validation.buildVCard({
+      firstName: 'Anna',
+      lastName: 'Muster',
+      organization: 'Beispiel, GmbH',
+      title: 'Leitung',
+      phone: '+43 1 2345',
+      email: 'anna@example.com',
+      street: 'Hauptstra\u00dfe 1',
+      postalCode: '1010',
+      city: 'Wien',
+      country: '\u00d6sterreich',
+      website: 'https://example.com'
+    }),
+    [
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      'N:Muster;Anna;;;',
+      'FN:Anna Muster',
+      'ORG:Beispiel\\, GmbH',
+      'TITLE:Leitung',
+      'TEL;TYPE=CELL:+43 1 2345',
+      'EMAIL;TYPE=INTERNET:anna@example.com',
+      'ADR;TYPE=WORK:;;Hauptstra\u00dfe 1;Wien;;1010;\u00d6sterreich',
+      'URL:https://example.com',
+      'END:VCARD'
+    ].join('\r\n')
+  );
+});
+
+run('Calendar event uses local date-times and escaped text', () => {
+  assert.equal(
+    validation.buildCalendarEvent({
+      title: 'Planung, Teil 1',
+      start: '2026-07-01T09:30',
+      end: '2026-07-01T10:45',
+      location: 'Wien; B\u00fcro',
+      description: 'Zeile 1\nZeile 2'
+    }, new Date('2026-06-25T10:20:30Z')),
+    [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//qr-code-static//QR Generator//DE',
+      'BEGIN:VEVENT',
+      'UID:7794eed9@qr-code-static',
+      'DTSTAMP:20260625T102030Z',
+      'DTSTART:20260701T093000',
+      'DTEND:20260701T104500',
+      'SUMMARY:Planung\\, Teil 1',
+      'LOCATION:Wien\\; B\u00fcro',
+      'DESCRIPTION:Zeile 1\\nZeile 2',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n')
+  );
+});
+
 console.log('\nAlle Validation-Tests erfolgreich.');
