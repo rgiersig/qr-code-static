@@ -374,11 +374,21 @@
       const text = (elRawText.value || "");
       const encodeText = text.length ? text : " ";
 
-      clearNode(elQr);
-      lastSvgEl = null;
-      const svg = kjua({ render: "svg", text: encodeText, size, crisp: true, quiet: 2 });
-      elQr.appendChild(svg);
-      lastSvgEl = svg;
+      try {
+        const svg = kjua({ render: "svg", text: encodeText, size, crisp: true, quiet: 2 });
+        clearNode(elQr);
+        elQr.appendChild(svg);
+        lastSvgEl = svg;
+        elQrHint.textContent = "QR wird jederzeit aus der Roh-Text-Box gerendert.";
+        elQrHint.classList.remove("error");
+      } catch (err) {
+        const mailHint = activeType === "mail"
+          ? " Bitte E-Mail-Betreff oder Mailtext kürzen."
+          : " Bitte die Eingabedaten kürzen.";
+        elQrHint.textContent = `Zu viele Daten für einen QR-Code (${text.length} Zeichen).${mailHint}`;
+        elQrHint.classList.add("error");
+        tlog("QR rendering failed:", err);
+      }
     });
 
     const render = traceWrap("render", () => {
@@ -427,11 +437,15 @@
       const size = parseInt(elSize.value, 10);
       const text = (elRawText.value || "");
       const encodeText = text.length ? text : " ";
-      const canvas = kjua({ render: "canvas", text: encodeText, size, crisp: true, quiet: 2 });
-      canvas.toBlob(traceWrap("canvas.toBlob(callback)", (blob) => {
-        if (!blob) return;
-        downloadBlob(blob, `qr_${activeType}_${size}px_${ts()}.png`);
-      }), "image/png");
+      try {
+        const canvas = kjua({ render: "canvas", text: encodeText, size, crisp: true, quiet: 2 });
+        canvas.toBlob(traceWrap("canvas.toBlob(callback)", (blob) => {
+          if (!blob) return;
+          downloadBlob(blob, `qr_${activeType}_${size}px_${ts()}.png`);
+        }), "image/png");
+      } catch (err) {
+        renderQrFromRawText();
+      }
     }));
 
     btnAutoEpc.addEventListener("click", traceWrap("onClick(btnAutoEpc)", () => {
