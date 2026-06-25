@@ -28,6 +28,9 @@
     input[type="range"] { padding: 0; border: none; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     .warn { background: #fff2f2; border-color: #f3b0b0; }
+    .checkGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+    .checkOption { display: flex; align-items: center; gap: 7px; margin: 0; padding: 8px; border: 1px solid var(--border); border-radius: 8px; color: #344054; }
+    .checkOption input { width: auto; margin: 0; }
 
     .inputFrame { border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; min-height: 620px; }
     .tabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border); background: #f8fafc; border-radius: 10px 10px 0 0; }
@@ -178,6 +181,18 @@
               <label for="calendarDescription">Beschreibung (optional)</label>
               <textarea id="calendarDescription"></textarea>
             </div>
+            <fieldset style="border:0; padding:0; margin:0;">
+              <legend style="font-size:12px; color:#475467; margin-bottom:6px;">Erinnerungen (optional, mehrfach wählbar)</legend>
+              <div class="checkGrid">
+                <label class="checkOption"><input id="calendarReminder1w" type="checkbox" />1 Woche vorher</label>
+                <label class="checkOption"><input id="calendarReminder2d" type="checkbox" />2 Tage vorher</label>
+                <label class="checkOption"><input id="calendarReminder1d" type="checkbox" />1 Tag vorher</label>
+                <label class="checkOption"><input id="calendarReminder2h" type="checkbox" />2 Stunden vorher</label>
+                <label class="checkOption"><input id="calendarReminder1h" type="checkbox" />1 Stunde vorher</label>
+                <label class="checkOption"><input id="calendarReminder30m" type="checkbox" />30 Minuten vorher</label>
+                <label class="checkOption"><input id="calendarReminder15m" type="checkbox" />15 Minuten vorher</label>
+              </div>
+            </fieldset>
             <div class="hint">Die Uhrzeiten werden als lokale Zeit ohne feste Zeitzone gespeichert.</div>
           </div>
 
@@ -359,6 +374,15 @@
     const elCalendarEnd = $("calendarEnd");
     const elCalendarLocation = $("calendarLocation");
     const elCalendarDescription = $("calendarDescription");
+    const calendarReminders = [
+      { element: $("calendarReminder1w"), trigger: "-P1W", label: "Erinnerung: Termin in 1 Woche" },
+      { element: $("calendarReminder2d"), trigger: "-P2D", label: "Erinnerung: Termin in 2 Tagen" },
+      { element: $("calendarReminder1d"), trigger: "-P1D", label: "Erinnerung: Termin in 1 Tag" },
+      { element: $("calendarReminder2h"), trigger: "-PT2H", label: "Erinnerung: Termin in 2 Stunden" },
+      { element: $("calendarReminder1h"), trigger: "-PT1H", label: "Erinnerung: Termin in 1 Stunde" },
+      { element: $("calendarReminder30m"), trigger: "-PT30M", label: "Erinnerung: Termin in 30 Minuten" },
+      { element: $("calendarReminder15m"), trigger: "-PT15M", label: "Erinnerung: Termin in 15 Minuten" }
+    ];
     const elWifiSsid = $("wifiSsid");
     const elWifiAuth = $("wifiAuth");
     const elWifiHidden = $("wifiHidden");
@@ -477,7 +501,10 @@
         start: elCalendarStart.value,
         end: elCalendarEnd.value,
         location: elCalendarLocation.value,
-        description: elCalendarDescription.value
+        description: elCalendarDescription.value,
+        reminders: calendarReminders
+          .filter((reminder) => reminder.element.checked)
+          .map(({ trigger, label }) => ({ trigger, label }))
       });
     });
 
@@ -657,6 +684,7 @@
         elVcardCity, elVcardCountry, elVcardWebsite,
         elCalendarTitle, elCalendarStart, elCalendarEnd,
         elCalendarLocation, elCalendarDescription,
+        ...calendarReminders.map((reminder) => reminder.element),
         elWifiSsid, elWifiAuth, elWifiHidden, elWifiPassword, elPlainText, elSize
       ]
         .forEach((el) => bindInput(el, evt, render));

@@ -162,6 +162,15 @@
     if (data.title) lines.push("SUMMARY:" + escapeStructuredText(singleLine(data.title)));
     if (data.location) lines.push("LOCATION:" + escapeStructuredText(singleLine(data.location)));
     if (data.description) lines.push("DESCRIPTION:" + escapeStructuredText(data.description));
+    (data.reminders || []).forEach(function (reminder) {
+      lines.push(
+        "BEGIN:VALARM",
+        "TRIGGER:" + reminder.trigger,
+        "ACTION:DISPLAY",
+        "DESCRIPTION:" + escapeStructuredText(reminder.label),
+        "END:VALARM"
+      );
+    });
     lines.push("END:VEVENT", "END:VCALENDAR");
     return lines.join("\r\n");
   }

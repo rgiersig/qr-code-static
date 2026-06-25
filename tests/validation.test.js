@@ -156,4 +156,31 @@ run('Calendar event uses local date-times and escaped text', () => {
   );
 });
 
+run('Calendar event supports multiple VALARM reminders', () => {
+  const event = validation.buildCalendarEvent({
+    title: 'Besprechung',
+    start: '2026-07-01T09:30',
+    end: '2026-07-01T10:45',
+    location: '',
+    description: '',
+    reminders: [
+      { trigger: '-P1W', label: 'Erinnerung: Termin in 1 Woche' },
+      { trigger: '-P2D', label: 'Erinnerung: Termin in 2 Tagen' },
+      { trigger: '-P1D', label: 'Erinnerung: Termin in 1 Tag' },
+      { trigger: '-PT2H', label: 'Erinnerung: Termin in 2 Stunden' },
+      { trigger: '-PT1H', label: 'Erinnerung: Termin in 1 Stunde' },
+      { trigger: '-PT30M', label: 'Erinnerung: Termin in 30 Minuten' },
+      { trigger: '-PT15M', label: 'Erinnerung: Termin in 15 Minuten' }
+    ]
+  }, new Date('2026-06-25T10:20:30Z'));
+
+  assert.equal((event.match(/BEGIN:VALARM/g) || []).length, 7);
+  ['-P1W', '-P2D', '-P1D', '-PT2H', '-PT1H', '-PT30M', '-PT15M']
+    .forEach((trigger) => assert.ok(event.includes(`TRIGGER:${trigger}\r\n`)));
+  assert.match(
+    event,
+    /BEGIN:VALARM\r\nTRIGGER:-PT1H\r\nACTION:DISPLAY\r\nDESCRIPTION:Erinnerung: Termin in 1 Stunde\r\nEND:VALARM/
+  );
+});
+
 console.log('\nAlle Validation-Tests erfolgreich.');
