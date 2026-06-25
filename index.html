@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'" />
-  <title>QR Generator (URL, WiFi, Text, SEPA)</title>
+  <title>QR Generator (URL, E-Mail, WiFi, Text, SEPA)</title>
   <style>
     :root { --gap: 12px; --border: #d0d5dd; --bg: #f6f7f9; --accent: #2563eb; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 18px; line-height: 1.3; }
@@ -30,7 +30,7 @@
     .warn { background: #fff2f2; border-color: #f3b0b0; }
 
     .inputFrame { border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; min-height: 620px; }
-    .tabs { display: flex; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border); background: #f8fafc; border-radius: 10px 10px 0 0; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border); background: #f8fafc; border-radius: 10px 10px 0 0; }
     .tabBtn[aria-selected="true"] { border-color: var(--accent); color: var(--accent); background: #eff6ff; }
     .tabContent { flex: 1 1 auto; padding: 12px; }
     .tabPanel[hidden] { display: none; }
@@ -48,6 +48,7 @@
       <div class="inputFrame">
         <div class="tabs" role="tablist" aria-label="QR-Typ">
           <button id="tabUrl" class="tabBtn" type="button" role="tab" aria-selected="true" aria-controls="panelUrl">URL</button>
+          <button id="tabMail" class="tabBtn" type="button" role="tab" aria-selected="false" aria-controls="panelMail">E-Mail</button>
           <button id="tabWifi" class="tabBtn" type="button" role="tab" aria-selected="false" aria-controls="panelWifi">WiFi</button>
           <button id="tabText" class="tabBtn" type="button" role="tab" aria-selected="false" aria-controls="panelText">Text</button>
           <button id="tabSepa" class="tabBtn" type="button" role="tab" aria-selected="false" aria-controls="panelSepa">SEPA</button>
@@ -59,6 +60,21 @@
               <label for="urlInput">URL</label>
               <input id="urlInput" autocomplete="off" placeholder="https://example.com" />
               <div class="hint">Protokoll wird automatisch ergänzt, wenn es fehlt.</div>
+            </div>
+          </div>
+
+          <div id="panelMail" class="tabPanel row" role="tabpanel" hidden>
+            <div>
+              <label for="mailAddress">E-Mail-Adresse</label>
+              <input id="mailAddress" type="email" autocomplete="email" placeholder="name@example.com" />
+            </div>
+            <div>
+              <label for="mailSubject">Betreff (optional)</label>
+              <input id="mailSubject" autocomplete="off" placeholder="Betreff der E-Mail" />
+            </div>
+            <div>
+              <label for="mailBody">Mailtext (optional)</label>
+              <textarea id="mailBody" placeholder="Text der E-Mail"></textarea>
             </div>
           </div>
 
@@ -195,10 +211,12 @@
     const $ = traceWrap("$", (id) => document.getElementById(id));
 
     const tabUrl = $("tabUrl");
+    const tabMail = $("tabMail");
     const tabWifi = $("tabWifi");
     const tabText = $("tabText");
     const tabSepa = $("tabSepa");
     const panelUrl = $("panelUrl");
+    const panelMail = $("panelMail");
     const panelWifi = $("panelWifi");
     const panelText = $("panelText");
     const panelSepa = $("panelSepa");
@@ -210,6 +228,9 @@
     const elPurpose = $("purpose");
 
     const elUrl = $("urlInput");
+    const elMailAddress = $("mailAddress");
+    const elMailSubject = $("mailSubject");
+    const elMailBody = $("mailBody");
     const elWifiSsid = $("wifiSsid");
     const elWifiAuth = $("wifiAuth");
     const elWifiHidden = $("wifiHidden");
@@ -242,6 +263,7 @@
     const isValidIban = traceWrap("isValidIban", Validation.isValidIban);
     const isValidBic = traceWrap("isValidBic", Validation.isValidBic);
     const normAmount = traceWrap("normAmount", Validation.normAmount);
+    const buildMailto = traceWrap("buildMailto", Validation.buildMailto);
 
     const clearNode = traceWrap("clearNode", (node) => {
       while (node.firstChild) node.removeChild(node.firstChild);
@@ -251,6 +273,7 @@
       activeType = type;
       const cfg = [
         [tabUrl, panelUrl, type === "url"],
+        [tabMail, panelMail, type === "mail"],
         [tabWifi, panelWifi, type === "wifi"],
         [tabText, panelText, type === "text"],
         [tabSepa, panelSepa, type === "sepa"]
@@ -281,6 +304,10 @@
       if (!raw) return "";
       if (/^https?:\/\//i.test(raw)) return raw;
       return `https://${raw}`;
+    });
+
+    const buildMailText = traceWrap("buildMailText", () => {
+      return buildMailto(elMailAddress.value, elMailSubject.value, elMailBody.value);
     });
 
     const escWifi = (s) => (s || "").replace(/([\\;,:\"])/g, "\\$1");
@@ -335,6 +362,7 @@
 
     const buildRawByType = traceWrap("buildRawByType", () => {
       if (activeType === "url") return buildUrlText();
+      if (activeType === "mail") return buildMailText();
       if (activeType === "wifi") return buildWifiText();
       if (activeType === "text") return buildTextText();
       return buildSepaText();
@@ -417,7 +445,7 @@
     }
 
     ["input", "change"].forEach((evt) => {
-      [elName, elIban, elBic, elAmount, elPurpose, elUrl, elWifiSsid, elWifiAuth, elWifiHidden, elWifiPassword, elPlainText, elSize]
+      [elName, elIban, elBic, elAmount, elPurpose, elUrl, elMailAddress, elMailSubject, elMailBody, elWifiSsid, elWifiAuth, elWifiHidden, elWifiPassword, elPlainText, elSize]
         .forEach((el) => bindInput(el, evt, render));
     });
 
@@ -431,6 +459,7 @@
     });
 
     tabUrl.addEventListener("click", () => setTab("url"));
+    tabMail.addEventListener("click", () => setTab("mail"));
     tabWifi.addEventListener("click", () => setTab("wifi"));
     tabText.addEventListener("click", () => setTab("text"));
     tabSepa.addEventListener("click", () => setTab("sepa"));

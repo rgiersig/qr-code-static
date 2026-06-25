@@ -59,6 +59,16 @@
     return /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic);
   }
 
+  function buildMailto(address, subject, body) {
+    var recipient = singleLine(address);
+    var params = [];
+
+    if (subject) params.push("subject=" + encodeURIComponent(subject));
+    if (body) params.push("body=" + encodeURIComponent(body));
+
+    return "mailto:" + recipient + (params.length ? "?" + params.join("&") : "");
+  }
+
   return {
     singleLine: singleLine,
     normIban: normIban,
@@ -66,6 +76,7 @@
     normAmount: normAmount,
     truncate: truncate,
     isValidIban: isValidIban,
-    isValidBic: isValidBic
+    isValidBic: isValidBic,
+    buildMailto: buildMailto
   };
 });

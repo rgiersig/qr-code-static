@@ -63,4 +63,22 @@ run('BIC Schlechttest: unzulässiges Zeichen', () => {
   assert.equal(validation.isValidBic('PBNKDE$F'), false);
 });
 
+run('Mailto: recipient without optional fields', () => {
+  assert.equal(
+    validation.buildMailto(' test@example.com ', '', ''),
+    'mailto:test@example.com'
+  );
+});
+
+run('Mailto: subject and body are URL encoded', () => {
+  assert.equal(
+    validation.buildMailto(
+      'test@example.com',
+      'Gr\u00fc\u00dfe & Termin',
+      'Hallo!\nPasst 10:30 Uhr?'
+    ),
+    'mailto:test@example.com?subject=Gr%C3%BC%C3%9Fe%20%26%20Termin&body=Hallo!%0APasst%2010%3A30%20Uhr%3F'
+  );
+});
+
 console.log('\nAlle Validation-Tests erfolgreich.');
